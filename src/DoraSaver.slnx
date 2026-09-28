@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DoraSaver.Setup/DoraSaver.Setup.csproj" />
+  <Project Path="DoraSaver.Tests/DoraSaver.Tests.csproj" />
+  <Project Path="DoraSaver/DoraSaver.csproj" />
+</Solution>

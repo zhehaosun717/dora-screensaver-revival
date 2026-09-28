@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- .NET Framework 4.8 ships with Windows 10 (1903+) and 11, so users never install a runtime. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <!-- The WebView2 package also ships a WPF assembly we never load. -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+    <RootNamespace>DoraSaver</RootNamespace>
+    <AssemblyName>DoraSaver</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
+    <Product>DoraSaver</Product>
+    <Description>Doraemon Flash screensaver player (Ruffle + WebView2)</Description>
+    <Version>1.0.0</Version>
+    <!-- Which screensaver this build is; set with -p:SaverId=... -->
+    <SaverId Condition="'$(SaverId)' == ''">birthday</SaverId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="SaverId" Value="$(SaverId)" />
+    <InternalsVisibleTo Include="DoraSaver.Tests" />
+    <Using Include="System.Drawing" />
+    <Using Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4191.47" />
+  </ItemGroup>
+
+</Project>

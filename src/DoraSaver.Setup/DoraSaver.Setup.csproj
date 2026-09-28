@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Single self-contained exe on .NET Framework 4.8 (built into Windows 10 1903+ and 11). -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <RootNamespace>DoraSaver.Setup</RootNamespace>
+    <AssemblyName>DoraSaverSetup</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Product>DoraSaver Setup</Product>
+    <Description>Installs the Doraemon Screensaver Revival screensavers</Description>
+    <Version>1.0.0</Version>
+    <!-- Built by build.ps1: Ruffle, the player page, the WebView2 runtime files and the .scr hosts. -->
+    <PayloadZip Condition="'$(PayloadZip)' == ''">$(MSBuildThisFileDirectory)..\..\obj-payload\payload.zip</PayloadZip>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\DoraSaver\Core\SaverCatalog.cs" Link="Shared\SaverCatalog.cs" />
+    <Compile Include="..\DoraSaver\Core\UiText.cs" Link="Shared\UiText.cs" />
+    <Compile Include="..\DoraSaver\Core\Polyfills.cs" Link="Shared\Polyfills.cs" />
+    <InternalsVisibleTo Include="DoraSaver.Tests" />
+    <Using Include="System.Drawing" />
+    <Using Include="System.Windows.Forms" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <Target Name="RequirePayload" BeforeTargets="BeforeBuild" Condition="'$(RequirePayload)' == 'true' And !Exists('$(PayloadZip)')">
+    <Error Text="The release setup must embed payload.zip (PayloadZip not found)." />
+  </Target>
+
+  <ItemGroup Condition="Exists('$(PayloadZip)')">
+    <EmbeddedResource Include="$(PayloadZip)" LogicalName="payload.zip" />
+  </ItemGroup>
+
+</Project>

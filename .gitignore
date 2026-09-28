@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+dist/
+obj-payload/
+obj-publish/
+.vs/
+*.user
+
+# Fetched by build.ps1 (pinned by SHA-256)
+assets/ruffle/
+
+# Never commit Doraemon assets or the original downloads
+assets/swf/
+originals/
+extract/
+research/
+vendor/
+original-backup/
+
+# Local helpers
+dev/
+remote/
+*.log
+
+# Test output
+TestResults/
