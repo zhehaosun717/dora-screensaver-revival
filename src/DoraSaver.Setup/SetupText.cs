@@ -39,6 +39,7 @@ internal sealed record SetupText(
     string Warning,
     string UninstallLeftovers,
     string AlreadyRunning,
+    string PermissionsFailed,
     string Error)
 {
     public static SetupText Chinese { get; } = new(
@@ -76,6 +77,7 @@ internal sealed record SetupText(
         "  ⚠ {0}",
         "已卸载，但有 {0} 个文件被占用没能删除，重启电脑后可以手动删除。",
         "安装程序已经在运行了。",
+        "无法为安装文件夹设置普通用户的读取权限。",
         "出错了：{0}");
 
     public static SetupText Japanese { get; } = new(
@@ -113,6 +115,7 @@ internal sealed record SetupText(
         "  ⚠ {0}",
         "アンインストールしましたが、使用中のため {0} 個のファイルを削除できませんでした。再起動後に手動で削除できます。",
         "セットアップはすでに実行中です。",
+        "インストール先フォルダーに一般ユーザーの読み取り権限を設定できませんでした。",
         "エラー：{0}");
 
     public static SetupText English { get; } = new(
@@ -150,6 +153,7 @@ internal sealed record SetupText(
         "  ⚠ {0}",
         "Uninstalled, but {0} files were in use and could not be deleted. You can delete them after restarting.",
         "Setup is already running.",
+        "Could not give standard users read access to the install folder.",
         "Error: {0}");
 
     public static SetupText For(UiLanguage language) => language switch

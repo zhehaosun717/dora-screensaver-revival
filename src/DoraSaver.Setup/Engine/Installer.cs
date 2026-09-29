@@ -99,6 +99,15 @@ internal sealed class Installer
     {
         SystemIntegration.StopRunningScreensavers();
         SwapInstallFolder(staging);
+
+        // The staging folder was admin-only; a moved folder keeps its ACL, and the screensavers run as
+        // the signed-in user. Give the install folder the normal inherited Program Files permissions.
+        SecureFolder.ResetToInherited(SystemIntegration.InstallFolder);
+        if (!SecureFolder.UsersCanRead(SystemIntegration.InstallFolder))
+        {
+            throw new UnauthorizedAccessException(_text.PermissionsFailed);
+        }
+
         string setupCopy = CopySetupIntoInstallFolder();
         SystemIntegration.WriteUninstallEntry(setupCopy, Version, FolderSizeKb(SystemIntegration.InstallFolder));
 
