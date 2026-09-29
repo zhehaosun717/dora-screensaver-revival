@@ -9,18 +9,18 @@ internal sealed class SetupForm : Form, IReporter
     private static readonly (UiLanguage Language, string Label)[] Languages =
         [(UiLanguage.Chinese, "中文"), (UiLanguage.Japanese, "日本語"), (UiLanguage.English, "English")];
 
-    private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Anchor = AnchorStyles.Right, Width = 120 };
-    private readonly Label _intro = new() { AutoSize = true, MaximumSize = new Size(640, 0), Margin = new Padding(3, 6, 3, 9) };
+    private readonly ComboBox _language = new() { DropDownStyle = ComboBoxStyle.DropDownList, Anchor = AnchorStyles.Right };
+    private readonly Label _intro = new() { AutoSize = true, Margin = new Padding(3, 6, 3, 9) };
     private readonly GroupBox _saversBox = new() { Dock = DockStyle.Fill, Padding = new Padding(9) };
     private readonly CheckedListBox _savers = new() { Dock = DockStyle.Fill, CheckOnClick = true, IntegralHeight = false, BorderStyle = BorderStyle.None, FormattingEnabled = true };
     private readonly GroupBox _namesBox = new() { Dock = DockStyle.Fill, AutoSize = true, Padding = new Padding(9) };
     private readonly Dictionary<UiLanguage, CheckBox> _nameChecks = [];
-    private readonly ProgressBar _progress = new() { Dock = DockStyle.Fill, Height = 18 };
+    private readonly ProgressBar _progress = new() { Dock = DockStyle.Fill };
     private readonly TextBox _log = new() { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Vertical, BackColor = SystemColors.Window };
-    private readonly Button _install = new() { AutoSize = true, MinimumSize = new Size(110, 30) };
-    private readonly Button _uninstall = new() { AutoSize = true, MinimumSize = new Size(110, 30) };
-    private readonly Button _openSettings = new() { AutoSize = true, MinimumSize = new Size(110, 30) };
-    private readonly Button _close = new() { AutoSize = true, MinimumSize = new Size(90, 30) };
+    private readonly Button _install = new() { AutoSize = true };
+    private readonly Button _uninstall = new() { AutoSize = true };
+    private readonly Button _openSettings = new() { AutoSize = true };
+    private readonly Button _close = new() { AutoSize = true };
     private SetupText _text;
     private CancellationTokenSource? _cancel;
     private bool _busy;
@@ -30,15 +30,12 @@ internal sealed class SetupForm : Form, IReporter
     {
         _text = SetupText.For(language);
         StartPosition = FormStartPosition.CenterScreen;
-        AutoScaleMode = AutoScaleMode.Dpi;
-        ClientSize = new Size(680, 760);
-        MinimumSize = new Size(560, 600);
-        Padding = new Padding(12);
+        AutoScaleMode = AutoScaleMode.None;
         Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
 
         Controls.Add(BuildLayout());
         _savers.Format += FormatSaver;
-        foreach (SaverInfo saver in SaverCatalog.All)
+        foreach (SaverInfo saver in SaverCatalog.All.OrderBy(s => s.Year))
         {
             _savers.Items.Add(saver, isChecked: true);
         }
@@ -63,6 +60,39 @@ internal sealed class SetupForm : Form, IReporter
         ApplyText(_text);
         _uninstall.Enabled = SystemIntegration.IsInstalled();
     }
+
+    /// <summary>
+    /// .NET Framework does not rescale explicit pixel sizes for per-monitor DPI, and the monitor's DPI
+    /// is only known once the window handle exists, so size everything here.
+    /// </summary>
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        Size client = Scaled(680, 780);
+        Rectangle area = Screen.FromHandle(Handle).WorkingArea;
+        ClientSize = new Size(Math.Min(client.Width, area.Width - Scale(40)), Math.Min(client.Height, area.Height - Scale(60)));
+        MinimumSize = Scaled(560, 560);
+        Padding = new Padding(Scale(12));
+        _intro.MaximumSize = new Size(ClientSize.Width - Scale(40), 0);
+        _language.Width = Scale(120);
+        _progress.Height = Scale(18);
+        foreach (Button button in new[] { _install, _uninstall, _openSettings })
+        {
+            button.MinimumSize = Scaled(110, 30);
+        }
+
+        _close.MinimumSize = Scaled(90, 30);
+        CenterToScreen();
+    }
+
+    private float DpiScale => (IsHandleCreated ? GetDpiForWindow(Handle) : 96) / 96f;
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern uint GetDpiForWindow(IntPtr window);
+
+    private int Scale(int value) => (int)Math.Round(value * DpiScale);
+
+    private Size Scaled(int width, int height) => new(Scale(width), Scale(height));
 
     public void Log(string message) => OnUi(() => _log.AppendText(message + Environment.NewLine));
 
@@ -143,6 +173,10 @@ internal sealed class SetupForm : Form, IReporter
         }
 
         _savers.EndUpdate();
+        if (_savers.Items.Count > 0)
+        {
+            _savers.TopIndex = 0;
+        }
     }
 
     private void FormatSaver(object? sender, ListControlConvertEventArgs e)
