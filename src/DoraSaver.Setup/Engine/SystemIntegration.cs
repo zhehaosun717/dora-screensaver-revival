@@ -195,12 +195,31 @@ internal static class SystemIntegration
         }
     }
 
-    public static void OpenScreenSaverSettings() =>
-        Process.Start(new ProcessStartInfo(Path.Combine(System32, "control.exe"), "desk.cpl,,@screensaver")
+    /// <summary>
+    /// Opens Screen Saver Settings as the signed-in user, not elevated like this setup: the desktop
+    /// (Explorer) runs it. Otherwise its previews would run as administrator too.
+    /// </summary>
+    public static void OpenScreenSaverSettings()
+    {
+        string control = Path.Combine(System32, "control.exe");
+        const string arguments = "desk.cpl,,@screensaver";
+        try
         {
-            UseShellExecute = false,
-            WorkingDirectory = System32,
-        });
+            dynamic shellWindows = Activator.CreateInstance(Type.GetTypeFromCLSID(new Guid("9BA05972-F6A8-11CF-A442-00A0C90A8F39"))!)!;
+            object location = 0;
+            object root = 0;
+            const int desktop = 8; // SWC_DESKTOP
+            const int needDispatch = 1; // SWFO_NEEDDISPATCH
+            dynamic browser = shellWindows.FindWindowSW(ref location, ref root, desktop, out int _, needDispatch);
+            dynamic shell = browser.Document.Application;
+            shell.ShellExecute(control, arguments, System32, "open", 1);
+        }
+        catch (Exception ex) when (ex is COMException or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException or InvalidCastException or NullReferenceException)
+        {
+            // No desktop to ask (e.g. a remote session): open it directly.
+            Process.Start(new ProcessStartInfo(control, arguments) { UseShellExecute = false, WorkingDirectory = System32 });
+        }
+    }
 
     /// <summary>
     /// The screensaver choice of the person at the desk. When a standard user elevates with an

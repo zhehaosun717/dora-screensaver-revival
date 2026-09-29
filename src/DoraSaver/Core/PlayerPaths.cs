@@ -35,5 +35,13 @@ internal static class PlayerPaths
             && string.Equals(parsed.Host, VirtualHost, StringComparison.OrdinalIgnoreCase);
     }
 
-    public static string WebViewUserDataFolder => Path.Combine(Log.Directory, "WebView2");
+    /// <summary>
+    /// An elevated process (e.g. the Screen Saver dialog opened from the installer) cannot share a
+    /// WebView2 browser with a normal one; if both used one folder, the second would hang. Keep them apart.
+    /// </summary>
+    public static string WebViewUserDataFolder => Path.Combine(Log.Directory, IsElevated ? "WebView2-elevated" : "WebView2");
+
+    private static bool IsElevated =>
+        new System.Security.Principal.WindowsPrincipal(System.Security.Principal.WindowsIdentity.GetCurrent())
+            .IsInRole(System.Security.Principal.WindowsBuiltInRole.Administrator);
 }
