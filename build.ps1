@@ -7,7 +7,8 @@
 #   5. Build the setup with that payload embedded
 #
 # No Doraemon assets are involved: the setup downloads the originals from the Internet Archive.
-param([string]$Configuration = 'Release')
+# -Offline also embeds the Flash movies from assets\swf (for private copies only; never publish that exe).
+param([string]$Configuration = 'Release', [switch]$Offline)
 
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
@@ -65,6 +66,17 @@ Copy-Item (Join-Path $firstHost 'runtimes') $stage -Recurse
 Copy-Item (Join-Path $root 'assets\player.html'), (Join-Path $root 'assets\player.js') $stage
 Get-ChildItem $ruffleDir -File | Where-Object Extension -ne '.map' | Copy-Item -Destination (Join-Path $stage 'ruffle')
 Copy-Item (Join-Path $root 'LICENSE'), (Join-Path $root 'THIRD-PARTY-NOTICES.md') $stage
+if ($Offline) {
+    $swfStage = Join-Path $stage 'swf'
+    New-Item -ItemType Directory -Force $swfStage | Out-Null
+    $swfNames = [regex]::Matches($catalog, '(?m)^\s+new\("[a-z0-9]+", "([a-z0-9_]+\.swf)"') | ForEach-Object { $_.Groups[1].Value }
+    foreach ($name in $swfNames) {
+        $file = Join-Path $root "assets\swf\$name"
+        if (-not (Test-Path $file)) { throw "Offline build needs assets\swf\$name" }
+        Copy-Item $file $swfStage
+    }
+    Write-Host "Offline build: embedded $($swfNames.Count) movies"
+}
 $payload = Join-Path $work 'payload.zip'
 Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $payload -CompressionLevel Optimal
 
@@ -72,7 +84,8 @@ Compress-Archive -Path (Join-Path $stage '*') -DestinationPath $payload -Compres
 $setupOut = Join-Path $work 'setup'
 Invoke-Checked { dotnet build (Join-Path $src 'DoraSaver.Setup\DoraSaver.Setup.csproj') -c $Configuration --nologo -v q -p:DebugType=none -p:RequirePayload=true "-p:PayloadZip=$payload" -o $setupOut } 'Setup build'
 New-Item -ItemType Directory -Force $dist | Out-Null
-Copy-Item (Join-Path $setupOut 'DoraSaverSetup.exe') $dist -Force
+$setupName = if ($Offline) { 'DoraSaverSetup-offline.exe' } else { 'DoraSaverSetup.exe' }
+Copy-Item (Join-Path $setupOut 'DoraSaverSetup.exe') (Join-Path $dist $setupName) -Force
 
-$exe = Get-Item (Join-Path $dist 'DoraSaverSetup.exe')
+$exe = Get-Item (Join-Path $dist $setupName)
 '{0}  {1:N1} MB  SHA-256 {2}' -f $exe.FullName, ($exe.Length / 1MB), (Get-FileHash $exe.FullName -Algorithm SHA256).Hash

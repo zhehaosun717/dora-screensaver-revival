@@ -142,7 +142,7 @@ internal sealed class Installer
             _reporter.Log(string.Format(_text.Fetching, saver.NameIn(_text.Language), saver.Year));
             try
             {
-                byte[]? movie = ReuseInstalledMovie(saver);
+                byte[]? movie = ReuseLocalMovie(saver, swfFolder);
                 bool reused = movie is not null;
                 movie ??= await DownloadMovieAsync(saver, extractor, downloader, cancel).ConfigureAwait(false);
                 File.WriteAllBytes(Path.Combine(swfFolder, saver.SwfFile), movie);
@@ -160,16 +160,27 @@ internal sealed class Installer
         return (installed, failed);
     }
 
-    private static byte[]? ReuseInstalledMovie(SaverInfo saver)
+    /// <summary>
+    /// A movie bundled in an offline build of the setup, or one already installed, saves a download.
+    /// Either is only used if it matches the catalog's length and SHA-256.
+    /// </summary>
+    private static byte[]? ReuseLocalMovie(SaverInfo saver, string bundledFolder)
     {
-        string existing = Path.Combine(SystemIntegration.InstallFolder, "swf", saver.SwfFile);
-        if (!File.Exists(existing))
+        string[] candidates =
+        [
+            Path.Combine(bundledFolder, saver.SwfFile),
+            Path.Combine(SystemIntegration.InstallFolder, "swf", saver.SwfFile),
+        ];
+        foreach (string candidate in candidates.Where(File.Exists))
         {
-            return null;
+            byte[] data = File.ReadAllBytes(candidate);
+            if (data.Length == saver.Source.SwfLength && Hash.Sha256(data) == saver.Source.SwfSha256)
+            {
+                return data;
+            }
         }
 
-        byte[] data = File.ReadAllBytes(existing);
-        return data.Length == saver.Source.SwfLength && Hash.Sha256(data) == saver.Source.SwfSha256 ? data : null;
+        return null;
     }
 
     private async Task<byte[]> DownloadMovieAsync(SaverInfo saver, Extractor extractor, Downloader downloader, CancellationToken cancel)
