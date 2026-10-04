@@ -8,6 +8,7 @@ internal sealed class SettingsForm : Form
     private static readonly LayoutMode[] LayoutOrder = [LayoutMode.Fit, LayoutMode.Extend, LayoutMode.Fill, LayoutMode.Stretch];
 
     private readonly CheckBox _playSound;
+    private readonly CheckBox _allMonitors;
     private readonly List<(LayoutMode Mode, RadioButton Button)> _layoutButtons = [];
     private readonly List<Label> _wrappingLabels = [];
     private readonly GroupBox _layoutGroup;
@@ -36,6 +37,8 @@ internal sealed class SettingsForm : Form
 
         _playSound = new CheckBox { Text = text.PlaySound, Checked = current.PlaySound, AutoSize = true, Margin = new Padding(3, 3, 3, 9) };
         root.Controls.Add(_playSound);
+        _allMonitors = new CheckBox { Text = text.AllMonitors, Checked = current.AllMonitors, AutoSize = true, Margin = new Padding(3, 0, 3, 9) };
+        root.Controls.Add(_allMonitors);
         _layoutGroup = BuildLayoutGroup(saver, current, text);
         root.Controls.Add(_layoutGroup);
 
@@ -63,7 +66,7 @@ internal sealed class SettingsForm : Form
         get
         {
             LayoutMode layout = _layoutButtons.FirstOrDefault(b => b.Button.Checked).Mode;
-            return new SaverSettings(_playSound.Checked, layout);
+            return new SaverSettings(_playSound.Checked, layout, _allMonitors.Checked);
         }
     }
 

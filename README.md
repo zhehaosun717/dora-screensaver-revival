@@ -60,7 +60,7 @@ Exit codes: 0 means success, 1 means partial success, 2 means failure.
   - turn sound effects and music on or off (off by default);
   - choose the widescreen mode: keep 4:3, extend, fill the screen (cropping top and bottom), or stretch. Each screensaver has a recommended default.
 - Move the mouse, click or press any key to exit.
-- With several monitors, the animation plays on the main one and the others go black.
+- With several monitors, every monitor plays the animation, with sound from the main one only. You can turn this off in Settings to use only the main monitor.
 
 ## Uninstall
 

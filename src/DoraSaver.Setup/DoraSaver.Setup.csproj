@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Single self-contained exe on .NET Framework 4.8 (built into Windows 10 1903+ and 11). -->
   <PropertyGroup>
@@ -15,7 +15,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Product>DoraSaver Setup</Product>
     <Description>Installs the Doraemon Screensaver Revival screensavers</Description>
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
     <!-- Built by build.ps1: Ruffle, the player page, the WebView2 runtime files and the .scr hosts. -->
     <PayloadZip Condition="'$(PayloadZip)' == ''">$(MSBuildThisFileDirectory)..\..\obj-payload\payload.zip</PayloadZip>
   </PropertyGroup>

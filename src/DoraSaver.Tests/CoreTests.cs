@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using DoraSaver.Core;
 using Xunit;
 
@@ -305,6 +305,7 @@ public class SaverSettingsTests
 
             Assert.False(defaults.PlaySound);
             Assert.Equal(saver.DefaultLayout, defaults.Layout);
+            Assert.True(defaults.AllMonitors);
         }
     }
 
@@ -317,8 +318,8 @@ public class SaverSettingsTests
         {
             Assert.Equal(SaverSettings.DefaultsFor(saver), store.Load(saver));
 
-            store.Save(saver, new SaverSettings(true, LayoutMode.Stretch));
-            Assert.Equal(new SaverSettings(true, LayoutMode.Stretch), store.Load(saver));
+            store.Save(saver, new SaverSettings(true, LayoutMode.Stretch, AllMonitors: false));
+            Assert.Equal(new SaverSettings(true, LayoutMode.Stretch, AllMonitors: false), store.Load(saver));
         }
         finally
         {

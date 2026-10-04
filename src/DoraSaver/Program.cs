@@ -62,13 +62,11 @@ internal static class Program
 
         Screen primary = Screen.PrimaryScreen ?? Screen.AllScreens[0];
         FullScreenForm main = new(primary, hostsPlayer: assets is not null);
-        List<FullScreenForm> forms =
-        [
-            main,
-            .. Screen.AllScreens
-                .Where(s => s.DeviceName != primary.DeviceName)
-                .Select(s => new FullScreenForm(s, hostsPlayer: false)),
-        ];
+        List<FullScreenForm> others = Screen.AllScreens
+            .Where(s => s.DeviceName != primary.DeviceName)
+            .Select(s => new FullScreenForm(s, hostsPlayer: assets is not null && settings.AllMonitors))
+            .ToList();
+        List<FullScreenForm> forms = [main, .. others];
 
         foreach (FullScreenForm form in forms)
         {
@@ -89,7 +87,14 @@ internal static class Program
         if (assets is not null)
         {
             // Queued so it starts once the message loop is running.
-            main.BeginInvoke((Action)(() => _ = main.StartPlayerAsync(assets, saver, settings)));
+            main.BeginInvoke((Action)(() =>
+            {
+                _ = main.StartPlayerAsync(assets, saver, settings, withSound: true);
+                foreach (FullScreenForm other in others)
+                {
+                    _ = other.StartPlayerAsync(assets, saver, settings, withSound: false);
+                }
+            }));
         }
 
         Application.Run();

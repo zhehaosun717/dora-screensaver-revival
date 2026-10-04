@@ -2,9 +2,10 @@ using Microsoft.Win32;
 
 namespace DoraSaver.Core;
 
-internal sealed record SaverSettings(bool PlaySound, LayoutMode Layout)
+/// <param name="AllMonitors">Play on every monitor (only the primary one plays sound) instead of only the primary.</param>
+internal sealed record SaverSettings(bool PlaySound, LayoutMode Layout, bool AllMonitors = true)
 {
-    public static SaverSettings DefaultsFor(SaverInfo saver) => new(PlaySound: false, saver.DefaultLayout);
+    public static SaverSettings DefaultsFor(SaverInfo saver) => new(PlaySound: false, saver.DefaultLayout, AllMonitors: true);
 }
 
 internal interface ISettingsStore
@@ -20,6 +21,7 @@ internal sealed class RegistrySettingsStore : ISettingsStore
     private const string RootKey = @"Software\DoraSaver";
     private const string PlaySoundValue = "PlaySound";
     private const string LayoutValue = "Layout";
+    private const string AllMonitorsValue = "AllMonitors";
 
     public SaverSettings Load(SaverInfo saver)
     {
@@ -36,7 +38,8 @@ internal sealed class RegistrySettingsStore : ISettingsStore
             LayoutMode layout = SaverCatalog.TryParseLayout(key.GetValue(LayoutValue) as string, out LayoutMode parsed)
                 ? parsed
                 : defaults.Layout;
-            return new SaverSettings(playSound, layout);
+            bool allMonitors = key.GetValue(AllMonitorsValue) is int all ? all != 0 : defaults.AllMonitors;
+            return new SaverSettings(playSound, layout, allMonitors);
         }
         catch (Exception ex) when (ex is System.Security.SecurityException or UnauthorizedAccessException or IOException)
         {
@@ -50,5 +53,6 @@ internal sealed class RegistrySettingsStore : ISettingsStore
         using RegistryKey key = Registry.CurrentUser.CreateSubKey($@"{RootKey}\{saver.Id}", writable: true);
         key.SetValue(PlaySoundValue, settings.PlaySound ? 1 : 0, RegistryValueKind.DWord);
         key.SetValue(LayoutValue, SaverCatalog.ToQueryValue(settings.Layout), RegistryValueKind.String);
+        key.SetValue(AllMonitorsValue, settings.AllMonitors ? 1 : 0, RegistryValueKind.DWord);
     }
 }

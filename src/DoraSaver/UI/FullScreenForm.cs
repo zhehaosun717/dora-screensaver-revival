@@ -31,7 +31,8 @@ internal sealed class FullScreenForm : Form
     /// <summary>Input seen by this window or its page; a backup for the global hooks.</summary>
     public event EventHandler<string>? WakeRequested;
 
-    public async Task StartPlayerAsync(string assetFolder, SaverInfo saver, SaverSettings settings)
+    /// <param name="withSound">Only one monitor plays sound, or every screen would echo it.</param>
+    public async Task StartPlayerAsync(string assetFolder, SaverInfo saver, SaverSettings settings, bool withSound)
     {
         if (_player is null)
         {
@@ -40,7 +41,7 @@ internal sealed class FullScreenForm : Form
 
         try
         {
-            await _player.StartAsync(assetFolder, saver, settings.Layout, muted: !settings.PlaySound);
+            await _player.StartAsync(assetFolder, saver, settings.Layout, muted: !(settings.PlaySound && withSound));
         }
         catch (Exception ex)
         {
