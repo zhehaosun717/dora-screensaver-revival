@@ -15,7 +15,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Product>DoraSaver Setup</Product>
     <Description>Installs the Doraemon Screensaver Revival screensavers</Description>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <!-- Built by build.ps1: Ruffle, the player page, the WebView2 runtime files and the .scr hosts. -->
     <PayloadZip Condition="'$(PayloadZip)' == ''">$(MSBuildThisFileDirectory)..\..\obj-payload\payload.zip</PayloadZip>
   </PropertyGroup>

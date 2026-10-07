@@ -18,7 +18,7 @@
     <GenerateBindingRedirectsOutputType>false</GenerateBindingRedirectsOutputType>
     <Product>DoraSaver</Product>
     <Description>Doraemon Flash screensaver player (Ruffle + WebView2)</Description>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <!-- Which screensaver this build is; set with -p:SaverId=... -->
     <SaverId Condition="'$(SaverId)' == ''">birthday</SaverId>
   </PropertyGroup>

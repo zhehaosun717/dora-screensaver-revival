@@ -9,11 +9,11 @@ internal sealed class FullScreenForm : Form
 {
     private readonly PlayerView? _player;
 
-    public FullScreenForm(Screen screen, bool hostsPlayer)
+    public FullScreenForm(Rectangle bounds, bool hostsPlayer)
     {
         FormBorderStyle = FormBorderStyle.None;
         StartPosition = FormStartPosition.Manual;
-        Bounds = screen.Bounds;
+        Bounds = bounds;
         BackColor = Color.Black;
         ShowInTaskbar = false;
         TopMost = true;

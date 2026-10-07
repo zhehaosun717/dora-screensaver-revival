@@ -15,6 +15,11 @@ internal sealed class PlayerView : WebView2
     private const string BrowserArguments = "--autoplay-policy=no-user-gesture-required";
 
     private const int MaxRenderRecoveries = 3;
+
+    // SetLoaderDllFolderPath throws once any other WebView2 API has run in the process, so all players
+    // (one per monitor) share one environment. Only touched on the UI thread, so no locking.
+    private static Task<CoreWebView2Environment>? _sharedEnvironment;
+
     private int _renderRecoveries;
 
     public PlayerView()
@@ -29,13 +34,7 @@ internal sealed class PlayerView : WebView2
 
     public async Task StartAsync(string assetFolder, SaverInfo saver, LayoutMode layout, bool muted)
     {
-        CoreWebView2Environment.SetLoaderDllFolderPath(DependencyResolver.LoaderFolder(assetFolder));
-        var options = new CoreWebView2EnvironmentOptions(BrowserArguments);
-        CoreWebView2Environment environment = await CoreWebView2Environment.CreateAsync(
-            browserExecutableFolder: null,
-            userDataFolder: PlayerPaths.WebViewUserDataFolder,
-            options: options);
-
+        CoreWebView2Environment environment = await SharedEnvironmentAsync(assetFolder);
         await EnsureCoreWebView2Async(environment);
         CoreWebView2 core = CoreWebView2;
 
@@ -71,6 +70,20 @@ internal sealed class PlayerView : WebView2
         Uri uri = PlayerPaths.BuildPlayerUri(saver, layout);
         Log.Info($"Playing {uri} (muted={muted})");
         core.Navigate(uri.ToString());
+    }
+
+    // No retry on failure: the loader path can only be set once, so a second attempt would just throw.
+    private static Task<CoreWebView2Environment> SharedEnvironmentAsync(string assetFolder) =>
+        _sharedEnvironment ??= CreateEnvironmentAsync(assetFolder);
+
+    private static async Task<CoreWebView2Environment> CreateEnvironmentAsync(string assetFolder)
+    {
+        CoreWebView2Environment.SetLoaderDllFolderPath(DependencyResolver.LoaderFolder(assetFolder));
+        var options = new CoreWebView2EnvironmentOptions(BrowserArguments);
+        return await CoreWebView2Environment.CreateAsync(
+            browserExecutableFolder: null,
+            userDataFolder: PlayerPaths.WebViewUserDataFolder,
+            options: options);
     }
 
     private void OnPageMessage(string? message)

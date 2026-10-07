@@ -60,11 +60,12 @@ internal static class Program
             Log.Error("Asset folder not found; showing a blank screen");
         }
 
-        Screen primary = Screen.PrimaryScreen ?? Screen.AllScreens[0];
-        FullScreenForm main = new(primary, hostsPlayer: assets is not null);
-        List<FullScreenForm> others = Screen.AllScreens
-            .Where(s => s.DeviceName != primary.DeviceName)
-            .Select(s => new FullScreenForm(s, hostsPlayer: assets is not null && settings.AllMonitors))
+        IReadOnlyList<MonitorArea> areas = MonitorLayout.Current();
+        Log.Info($"Monitors: {string.Join(", ", areas.Select(a => $"{a.Name} {a.Bounds}{(a.IsPrimary ? " primary" : "")}"))}; all monitors={settings.AllMonitors}");
+        FullScreenForm main = new(areas[0].Bounds, hostsPlayer: assets is not null);
+        List<FullScreenForm> others = areas
+            .Skip(1)
+            .Select(a => new FullScreenForm(a.Bounds, hostsPlayer: assets is not null && settings.AllMonitors))
             .ToList();
         List<FullScreenForm> forms = [main, .. others];
 
