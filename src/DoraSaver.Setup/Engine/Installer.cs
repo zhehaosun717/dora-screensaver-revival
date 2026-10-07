@@ -121,8 +121,9 @@ internal sealed class Installer
         {
             return SystemIntegration.RepointActiveScreensaver(primaryPaths);
         }
-        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException or ArgumentException)
         {
+            // Everything is installed by now; a screensaver setting we cannot follow is not worth failing for.
             _reporter.Log(string.Format(_text.Warning, ex.Message));
             return null;
         }

@@ -154,6 +154,27 @@ public class SystemIntegrationTests
         Assert.Equal(garbled, SystemIntegration.MojibakeName(japanese));
     }
 
+    [Theory]
+    [InlineData(@"C:\Windows\system32\Bubbles.scr", @"C:\Windows\system32\Bubbles.scr")]
+    [InlineData("\"C:\\WINDOWS\\system32\\帕门 剧场版2004.scr\"", @"C:\WINDOWS\system32\帕门 剧场版2004.scr")]
+    [InlineData("  \"C:\\a b\\x.scr\"  ", @"C:\a b\x.scr")]
+    [InlineData("", null)]
+    [InlineData("\"\"", null)]
+    [InlineData(null, null)]
+    [InlineData("C:\\bad|name.scr", null)]
+    public void Reads_the_active_screensaver_path_with_or_without_quotes(string? value, string? expected)
+    {
+        Assert.Equal(expected, SystemIntegration.ParseActiveSaverPath(value));
+    }
+
+    [Theory]
+    [InlineData(@"C:\Windows\system32\x.scr", @"C:\Windows\system32\x.scr")]
+    [InlineData(@"C:\Windows\system32\帕门 剧场版2004.scr", "\"C:\\Windows\\system32\\帕门 剧场版2004.scr\"")]
+    public void Quotes_the_active_screensaver_path_like_windows_when_it_has_spaces(string path, string expected)
+    {
+        Assert.Equal(expected, SystemIntegration.FormatActiveSaverPath(path));
+    }
+
     [Fact]
     public void Only_rar_and_stuffit_need_unar()
     {

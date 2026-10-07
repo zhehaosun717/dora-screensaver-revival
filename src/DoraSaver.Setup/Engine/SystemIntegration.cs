@@ -128,7 +128,7 @@ internal static class SystemIntegration
     public static string? RepointActiveScreensaver(IReadOnlyDictionary<string, string> newPathById)
     {
         using RegistryKey? desktop = OpenUserDesktopKey();
-        if (desktop?.GetValue(ActiveSaverValue) is not string current || current.Length == 0)
+        if (desktop is null || ParseActiveSaverPath(desktop.GetValue(ActiveSaverValue) as string) is not string current)
         {
             return null;
         }
@@ -146,9 +146,22 @@ internal static class SystemIntegration
             return null;
         }
 
-        desktop.SetValue(ActiveSaverValue, replacement, RegistryValueKind.String);
+        desktop.SetValue(ActiveSaverValue, FormatActiveSaverPath(replacement), RegistryValueKind.String);
         return replacement;
     }
+
+    /// <summary>
+    /// The path in SCRNSAVE.EXE, or null if none. Screen Saver Settings puts quotes around a path
+    /// with spaces, which the Path methods reject.
+    /// </summary>
+    public static string? ParseActiveSaverPath(string? value)
+    {
+        string? path = value?.Trim().Trim('"').Trim();
+        return string.IsNullOrEmpty(path) || path!.IndexOfAny(Path.GetInvalidPathChars()) >= 0 ? null : path;
+    }
+
+    /// <summary>Writes SCRNSAVE.EXE the way Screen Saver Settings does.</summary>
+    public static string FormatActiveSaverPath(string path) => path.IndexOf(' ') >= 0 ? $"\"{path}\"" : path;
 
     public static bool IsWebView2Installed()
     {
@@ -189,7 +202,7 @@ internal static class SystemIntegration
     public static void ClearActiveScreensaverIfMissing()
     {
         using RegistryKey? desktop = OpenUserDesktopKey();
-        if (desktop?.GetValue(ActiveSaverValue) is string current && current.Length > 0 && !File.Exists(current))
+        if (desktop is not null && ParseActiveSaverPath(desktop.GetValue(ActiveSaverValue) as string) is string current && !File.Exists(current))
         {
             desktop.SetValue(ActiveSaverValue, string.Empty, RegistryValueKind.String);
         }
